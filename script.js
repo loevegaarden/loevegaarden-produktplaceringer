@@ -1,81 +1,88 @@
-document.addEventListener('DOMContentLoaded', function () {
-    const tableBody = document.querySelector("#productTable tbody");
-    const searchInput = document.getElementById("searchInput");
-    const updateButton = document.getElementById("update-json");
+jQuery(document).ready(function ($) {
+    let productData = [];
 
-    function loadData() {
-        fetch(loevegaardenPlaceringerData.jsonUrl)
-            .then(res => res.json())
-            .then(data => {
-                tableBody.innerHTML = "";
-                data.forEach(product => {
-                    const row = document.createElement("tr");
-                    row.innerHTML = `
-                        <td>${product.id}</td>
-                        <td>${product.title}</td>
-                        <td>${product.gtin}</td>
-                        <td>${product.placering}</td>
-                        <td><a href="https://www.loevegaarden.dk/wp-admin/post.php?post=${product.id}&action=edit" target="_blank">Ret</a></td>
-                    `;
-                    tableBody.appendChild(row);
+    function renderTable(data) {
+        const tbody = $('#productTable tbody');
+        tbody.empty();
+
+        data.forEach(product => {
+            const row = $('<tr></tr>');
+
+            row.append(`<td>${product.id}</td>`);
+            row.append(`<td>${product.title}</td>`);
+            row.append(`<td>${product.gtin || ''}</td>`);
+            row.append(`<td>${product.placering || ''}</td>`);
+
+            const dateInput = $('<input type="text" class="datepicker" size="10">');
+            const qtyInput = $('<input type="number" min="1" size="4">');
+            const saveBtn = $('<button class="button">Gem</button>');
+            const status = $('<span class="status"></span>');
+
+            dateInput.addClass('hasDatepicker').datepicker({ dateFormat: 'yy-mm-dd' });
+
+            saveBtn.on('click', function () {
+                const expiryDate = dateInput.val();
+                const quantity = qtyInput.val();
+
+                if (!expiryDate || !quantity) {
+                    status.text('⚠️');
+                    return;
+                }
+
+                $.post(loevegaardenPlaceringerData.ajaxUrl, {
+                    action: 'loevegaarden_save_expiry_data',
+                    product_id: product.id,
+                    expiry_date: expiryDate,
+                    quantity: quantity
+                }, function (response) {
+                    if (response.success) {
+                        status.text('✔️');
+                        dateInput.val('');
+                        qtyInput.val('');
+                    } else {
+                        status.text('❌');
+                    }
                 });
             });
+
+            row.append($('<td></td>').append(dateInput));
+            row.append($('<td></td>').append(qtyInput));
+            row.append($('<td></td>').append(saveBtn).append(status));
+
+            tbody.append(row);
+        });
     }
 
-    searchInput.addEventListener("input", () => {
-        const query = searchInput.value.trim().toLowerCase();
-        const rows = tableBody.querySelectorAll("tr");
-
+    function filterTable() {
+        const query = $('#searchInput').val().toLowerCase();
         if (query.length < 3) {
-            rows.forEach(row => row.style.display = "");
+            renderTable(productData);
             return;
         }
 
-        rows.forEach(row => {
-            const gtin = row.children[2].textContent.toLowerCase();
-            const title = row.children[1].textContent.toLowerCase();
-            const placering = row.children[3].textContent.toLowerCase();
-            row.style.display = (gtin.includes(query) || title.includes(query) || placering.includes(query)) ? "" : "none";
+        const filtered = productData.filter(product =>
+            product.title.toLowerCase().includes(query) ||
+            (product.gtin && product.gtin.toLowerCase().includes(query)) ||
+            (product.placering && product.placering.toLowerCase().includes(query))
+        );
+
+        renderTable(filtered);
+    }
+
+    $('#searchInput').on('input', filterTable);
+
+    $('#update-json').on('click', function () {
+        $.post(loevegaardenPlaceringerData.ajaxUrl, {
+            action: 'loevegaarden_generate_json'
+        }, function (response) {
+            if (response.success) {
+                location.reload();
+            }
         });
     });
 
-    if (updateButton) {
-        updateButton.addEventListener("click", () => {
-            updateButton.disabled = true;
-            updateButton.textContent = "Opdaterer...";
-            fetch(loevegaardenPlaceringerData.ajaxUrl, {
-                method: "POST",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: "action=loevegaarden_generate_json"
-            })
-            .then(res => res.json())
-            .then(() => {
-                loadData();
-                updateButton.textContent = "Opdater liste";
-                updateButton.disabled = false;
-            });
-        });
-    }
-
-    loadData();
-});
-document.getElementById('update-json').addEventListener('click', function () {
-    fetch(loevegaardenPlaceringerData.ajaxUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-            action: 'loevegaarden_generate_json'
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success && data.data && data.data.timestamp) {
-            const updatedElem = document.querySelector('.updated-time strong');
-            if (updatedElem) {
-                updatedElem.textContent = data.data.timestamp.replace(' ', ' kl. ');
-            }
-        } else {
-            alert('Noget gik galt under opdatering.');
-        }
+    $.getJSON(loevegaardenPlaceringerData.jsonUrl, function (data) {
+        productData = data;
+        renderTable(productData);
     });
 });

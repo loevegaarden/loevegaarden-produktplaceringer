@@ -2,7 +2,7 @@
 /*
 Plugin Name: Løvegården Produktplaceringer
 Description: Viser en søgbar tabel over produktplaceringer baseret på GTIN, titel og attributten "placering". Giver mulighed for at tilføje "Bedst før" dato og antal via interface.
-Version: 1.5
+Version: 1.7
 Author: Løvegården
 GitHub Plugin URI: https://github.com/loevegaarden/loevegaarden-produktplaceringer
 */
@@ -25,11 +25,13 @@ function loevegaarden_add_menu() {
 // Tilføj scripts og styles til plugin-siden
 add_action('admin_enqueue_scripts', function () {
     if (isset($_GET['page']) && $_GET['page'] === 'loevegaarden_placeringer') {
-        wp_enqueue_script('loevegaarden-placeringer', plugin_dir_url(__FILE__) . 'script.js', ['jquery'], false, true);
+        wp_enqueue_script('jquery-ui-datepicker');
+        wp_enqueue_script('loevegaarden-placeringer', plugin_dir_url(__FILE__) . 'script.js', ['jquery', 'jquery-ui-datepicker'], false, true);
         wp_localize_script('loevegaarden-placeringer', 'loevegaardenPlaceringerData', [
             'jsonUrl' => plugin_dir_url(__FILE__) . 'produktplaceringer.json',
             'ajaxUrl' => admin_url('admin-ajax.php')
         ]);
+        wp_enqueue_style('jquery-ui-css', 'https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css');
         wp_enqueue_style('loevegaarden-style', plugin_dir_url(__FILE__) . 'style.css');
     }
 });
@@ -89,7 +91,7 @@ add_action('wp_ajax_loevegaarden_save_expiry_data', function () {
             'expiry_date' => $expiry_date,
             'quantity' => $quantity,
         ]);
-        wp_send_json_success(['message' => 'Bedst før data gemt']);
+        wp_send_json_success(['message' => '✔️ Gemt', 'product_id' => $post_id]);
     } else {
         wp_send_json_error(['message' => 'Ugyldige data']);
     }
