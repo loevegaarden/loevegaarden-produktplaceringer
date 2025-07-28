@@ -9,20 +9,24 @@ GitHub Plugin URI: https://github.com/loevegaarden/loevegaarden-produktplacering
 
 if (!defined('ABSPATH')) exit;
 
-// Indlæs admin-menu
-add_action('admin_menu', function () {
+// Debug log for at sikre plugin indlæses
+error_log('Løvegården Produktplaceringer plugin loaded');
+
+// Indlæs admin-menu (med tydelig funktion og lavere adgangskrav for test)
+add_action('admin_menu', 'loevegaarden_add_menu', 20);
+function loevegaarden_add_menu() {
     add_submenu_page(
         'edit.php?post_type=product',
         'Produktplaceringer',
         'Produktplaceringer',
-        'manage_woocommerce',
+        'manage_options', // Brug evt. manage_woocommerce igen senere
         'loevegaarden_placeringer',
         'loevegaarden_placeringer_page'
     );
-});
+}
 
 // Tilføj script og stil kun til vores plugin-side
-add_action('admin_enqueue_scripts', function ($hook) {
+add_action('admin_enqueue_scripts', function () {
     if (isset($_GET['page']) && $_GET['page'] === 'loevegaarden_placeringer') {
         wp_enqueue_script('loevegaarden-placeringer', plugin_dir_url(__FILE__) . 'script.js', [], false, true);
         wp_localize_script('loevegaarden-placeringer', 'loevegaardenPlaceringerData', [
@@ -64,7 +68,7 @@ function loevegaarden_placeringer_page() {
 
 // Admin-ajax til manuel opdatering
 add_action('wp_ajax_loevegaarden_generate_json', function () {
-    if (!current_user_can('manage_woocommerce')) wp_die();
+    if (!current_user_can('manage_options')) wp_die();
     loevegaarden_generate_json();
     wp_send_json_success(['message' => 'JSON opdateret', 'timestamp' => current_time('mysql')]);
 });
