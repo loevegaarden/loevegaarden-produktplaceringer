@@ -1,0 +1,8 @@
+# Ignore common files
+*.log
+*.sql
+*.zip
+node_modules/
+.vscode/
+.idea/
+__MACOSX/

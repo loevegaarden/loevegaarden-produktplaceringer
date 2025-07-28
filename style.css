@@ -1,0 +1,15 @@
+#loevegaarden-placeringer-wrapper {
+    margin-top: 20px;
+}
+#searchInput {
+    margin: 10px 0 20px 0;
+    width: 300px;
+    padding: 8px;
+}
+.topbar {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    margin-bottom: 10px;
+    gap: 10px;
+}
