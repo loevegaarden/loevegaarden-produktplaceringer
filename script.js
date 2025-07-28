@@ -13,12 +13,10 @@ jQuery(document).ready(function ($) {
             row.append(`<td>${product.gtin || ''}</td>`);
             row.append(`<td>${product.placering || ''}</td>`);
 
-            const dateInput = $('<input type="text" class="datepicker" size="10">');
+            const dateInput = $('<input type="date" size="10">');
             const qtyInput = $('<input type="number" min="1" size="4">');
             const saveBtn = $('<button class="button">Gem</button>');
             const status = $('<span class="status"></span>');
-
-            dateInput.addClass('hasDatepicker').datepicker({ dateFormat: 'yy-mm-dd' });
 
             saveBtn.on('click', function () {
                 const expiryDate = dateInput.val();

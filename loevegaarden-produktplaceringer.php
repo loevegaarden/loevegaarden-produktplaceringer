@@ -86,6 +86,10 @@ add_action('wp_ajax_loevegaarden_save_expiry_data', function () {
     $table = $wpdb->prefix . 'webis_pbet';
 
     if ($post_id > 0 && $expiry_date && $quantity > 0) {
+        // Sæt Enable Expiry Tracking til yes
+        update_post_meta($post_id, 'wpbet_product_tracking', 'yes');
+
+        // Indsæt ny række i batch/expiry-tabellen
         $wpdb->insert($table, [
             'post_id' => $post_id,
             'expiry_date' => $expiry_date,
@@ -96,6 +100,7 @@ add_action('wp_ajax_loevegaarden_save_expiry_data', function () {
         wp_send_json_error(['message' => 'Ugyldige data']);
     }
 });
+
 
 // Cron-job setup ved aktivering
 register_activation_hook(__FILE__, function () {
