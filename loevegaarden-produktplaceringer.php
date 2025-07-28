@@ -4,6 +4,7 @@ Plugin Name: Løvegården Produktplaceringer
 Description: Viser en søgbar tabel over produktplaceringer baseret på GTIN, titel og attributten "placering".
 Version: 1.2
 Author: Løvegården
+GitHub Plugin URI: https://github.com/loevegaarden/loevegaarden-produktplaceringer
 */
 
 if (!defined('ABSPATH')) exit;
