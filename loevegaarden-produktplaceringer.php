@@ -2,15 +2,12 @@
 /*
 Plugin Name: Løvegården Produktplaceringer
 Description: Viser en søgbar tabel over produktplaceringer baseret på GTIN, titel og attributten "placering". Giver mulighed for at tilføje "Bedst før" dato og antal via interface.
-Version: 1.4
+Version: 1.5
 Author: Løvegården
 GitHub Plugin URI: https://github.com/loevegaarden/loevegaarden-produktplaceringer
 */
 
 if (!defined('ABSPATH')) exit;
-
-// Debug log for at sikre plugin indlæses
-debug_log('Løvegården Produktplaceringer plugin loaded');
 
 // Indlæs admin-menu
 add_action('admin_menu', 'loevegaarden_add_menu', 20);
@@ -86,13 +83,16 @@ add_action('wp_ajax_loevegaarden_save_expiry_data', function () {
     global $wpdb;
     $table = $wpdb->prefix . 'webis_pbet';
 
-    $wpdb->insert($table, [
-        'post_id' => $post_id,
-        'expiry_date' => $expiry_date,
-        'quantity' => $quantity,
-    ]);
-
-    wp_send_json_success(['message' => 'Bedst før data gemt']);
+    if ($post_id > 0 && $expiry_date && $quantity > 0) {
+        $wpdb->insert($table, [
+            'post_id' => $post_id,
+            'expiry_date' => $expiry_date,
+            'quantity' => $quantity,
+        ]);
+        wp_send_json_success(['message' => 'Bedst før data gemt']);
+    } else {
+        wp_send_json_error(['message' => 'Ugyldige data']);
+    }
 });
 
 // Cron-job setup ved aktivering
