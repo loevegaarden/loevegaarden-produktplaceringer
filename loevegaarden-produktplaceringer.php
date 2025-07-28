@@ -2,7 +2,7 @@
 /*
 Plugin Name: Løvegården Produktplaceringer
 Description: Viser en søgbar tabel over produktplaceringer baseret på GTIN, titel og attributten "placering".
-Version: 1.2
+Version: 1.3
 Author: Løvegården
 GitHub Plugin URI: https://github.com/loevegaarden/loevegaarden-produktplaceringer
 */
@@ -36,7 +36,8 @@ add_action('admin_enqueue_scripts', function ($hook) {
 // Vis plugin-siden
 function loevegaarden_placeringer_page() {
     $json_file = plugin_dir_path(__FILE__) . 'produktplaceringer.json';
-    $last_updated = file_exists($json_file) ? date_i18n("Y-m-d H:i", filemtime($json_file)) : 'Aldrig';
+    $timestamp = file_exists($json_file) ? filemtime($json_file) : false;
+    $last_updated = $timestamp ? date_i18n("Y-m-d H:i", $timestamp, true) : 'Aldrig';
     echo '<div class="wrap">
         <h1>Produktplaceringer</h1>
         <div id="loevegaarden-placeringer-wrapper">
@@ -65,7 +66,7 @@ function loevegaarden_placeringer_page() {
 add_action('wp_ajax_loevegaarden_generate_json', function () {
     if (!current_user_can('manage_woocommerce')) wp_die();
     loevegaarden_generate_json();
-    wp_send_json_success('JSON opdateret');
+    wp_send_json_success(['message' => 'JSON opdateret', 'timestamp' => current_time('mysql')]);
 });
 
 // Cron-job setup ved aktivering

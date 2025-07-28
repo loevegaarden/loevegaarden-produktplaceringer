@@ -59,3 +59,23 @@ document.addEventListener('DOMContentLoaded', function () {
 
     loadData();
 });
+document.getElementById('update-json').addEventListener('click', function () {
+    fetch(loevegaardenPlaceringerData.ajaxUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+            action: 'loevegaarden_generate_json'
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.data && data.data.timestamp) {
+            const updatedElem = document.querySelector('.updated-time strong');
+            if (updatedElem) {
+                updatedElem.textContent = data.data.timestamp.replace(' ', ' kl. ');
+            }
+        } else {
+            alert('Noget gik galt under opdatering.');
+        }
+    });
+});
