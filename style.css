@@ -1,15 +1,10 @@
-#loevegaarden-placeringer-wrapper {
-    margin-top: 20px;
-}
-#searchInput {
-    margin: 10px 0 20px 0;
-    width: 300px;
-    padding: 8px;
-}
-.topbar {
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    margin-bottom: 10px;
-    gap: 10px;
-}
+#lgpp-overlay{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,0.8);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000}
+#lgpp-overlay.hidden{display:none}
+.lgpp-spinner{border:4px solid #f3f3f3;border-top:4px solid #3498db;border-radius:50%;width:40px;height:40px;animation:spin 1s linear infinite}
+@keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+.lgpp-controls{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+#searchInput{width:300px;padding:5px}
+.lgpp-controls-right{display:flex;align-items:center;gap:10px}
+#productTable{width:100%;border-collapse:collapse}
+#productTable th,#productTable td{border:1px solid #ddd;padding:8px}
+#productTable th{background:#f9f9f9}
