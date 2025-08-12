@@ -6,10 +6,10 @@ jQuery(function($){
     function showOverlay(){ $('#lgpp-overlay').removeClass('hidden'); }
     function hideOverlay(){ $('#lgpp-overlay').addClass('hidden'); }
     function loadJSON(){ showOverlay(); $.getJSON(`${lgppData.jsonUrl}?${Date.now()}`)
-        .done(json=>{dataList=json; $('#json-updated-at').text(lgppData.updated_at); render(); hideOverlay();})
+        .done(json=>{ dataList=json; render(); hideOverlay(); })
         .fail(()=>{alert('Kunne ikke hente listen'); hideOverlay();}); }
     function render(){ const q=$('#searchInput').val().trim().toLowerCase();
-        if(q.length<3){ return $('#productTable tbody').html('<tr><td colspan="10" style="text-align:center">Indtast mindst 3 tegn for at søge</td></tr>'); }
+        if(q.length<4){ return $('#productTable tbody').html('<tr><td colspan="10" style="text-align:center">Indtast mindst 4 tegn for at søge</td></tr>'); }
         let html=''; dataList.forEach(item=>{
             if(item.title.toLowerCase().includes(q)||item.gtin.includes(q)||item.placering.toLowerCase().includes(q)){
                 let current=''; if(item.expiry_enabled){ current=item.current_stock.map(e=>{const [n,dt]=e.split('@');[y,m,d]=dt.split(' ')[0].split('-');return`${n} stk, BF: ${d}-${m}-${y}`;}).join('<br>'); } else current=item.current_stock;
@@ -26,11 +26,30 @@ jQuery(function($){
         $('#productTable tbody').html(html||'<tr><td colspan="10" style="text-align:center">Ingen varer fundet</td></tr>');
     }
     $('#searchInput').on('input',()=>{clearTimeout(searchTimeout);searchTimeout=setTimeout(render,300);});
-    $('#update-json').on('click',loadJSON);
+    $('#update-json').on('click', function(){
+        showOverlay();
+        $.post(lgppData.ajaxUrl, { action:'loevegaarden_generate_json', nonce: lgppData.nonceGen })
+         .done(function(res){
+            if(res && res.success){ if(res.data && res.data.updated_at){ $('#json-updated-at').text(res.data.updated_at); } loadJSON(); }
+            else { alert('Kunne ikke opdatere JSON'); hideOverlay(); }
+         })
+         .fail(function(xhr){ alert('JSON-opdatering fejlede: '+(xhr.responseText||xhr.statusText)); hideOverlay(); });
+    });
     $(document).on('change','.enable-expiry-toggle',function(){ $(this).closest('tr').find('.expiry-date').prop('disabled',!this.checked); });
     $(document).on('click','.save-expiry',function(){ const r=$(this).closest('tr'),
         id=r.data('id'),qty=parseInt(r.find('.expiry-qty').val())||0,date=r.find('.expiry-date').val(),
         place=r.find('.placement-select').val(),enabled=r.find('.enable-expiry-toggle').is(':checked')?'yes':'no';
-        $.post(lgppData.ajaxUrl,{action:'loevegaarden_save_position_data',post_id:id,quantity:qty,date:date,placement:place,expiry_enabled:enabled,nonce:lgppData.nonceSave},res=>res.success?r.css('background','#e0ffe0'):alert('Fejl')); });
+        $.post(lgppData.ajaxUrl,{action:'loevegaarden_save_position_data',post_id:id,quantity:qty,date:date,placement:place,expiry_enabled:enabled,nonce:lgppData.nonceSave},function(res){
+            if(res && res.success){
+                r.css('background','#e0ffe0');
+                if(res.data && res.data.message){ console.log(res.data.message); }
+            } else {
+                const msg = res && res.data && res.data.message ? res.data.message : 'Der opstod en fejl under gem. Kontroller felterne og prøv igen.';
+                alert(msg);
+            }
+        }).fail(function(xhr){
+            alert('Uventet fejl: ' + (xhr.responseText||xhr.statusText));
+        });
+    });
     loadJSON();
 });
